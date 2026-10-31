@@ -12,7 +12,7 @@ Full D-pad, A/B/C, Option, Pause and the 12-key numeric keypad, recognized as a 
 **English** · [Português](README.pt-BR.md)
 
 <!-- Replace with a photo of the finished adapter -->
-<img src="docs/images/hero.jpg" alt="Finished Atari Jaguar to USB adapter" width="640">
+<img src="docs/images/Hero.jpg" alt="Finished Atari Jaguar to USB adapter" width="640">
 
 </div>
 
