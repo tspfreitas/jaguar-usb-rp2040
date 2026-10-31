@@ -31,4 +31,3 @@ jobs:
         with:
           name: jaguar_usb_rp2040-uf2
           path: build/jaguar_usb_rp2040.uf2
-
