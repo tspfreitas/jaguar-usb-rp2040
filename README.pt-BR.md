@@ -148,7 +148,7 @@ Se você gosta desse tipo de trabalho, considere também apoiar o autor original
 Este adaptador é gratuito e de código aberto. Se ele foi útil e você quiser ajudar a financiar futuros projetos de hardware retrô, doações são muito bem-vindas e totalmente opcionais. Elas não dão direito a suporte nem a funcionalidades especiais.
 
 <!-- Edite os links abaixo com as suas páginas e apague os que não for usar. -->
-- ☕ **Ko-fi:** https://ko-fi.com/YOUR_NAME
+- ☕ **Ko-fi:** ko-fi.com/thomasfreitas
 - 🇧🇷 **Pix:** `dev.freitas@gmail.com`
 
 Dar uma estrela no repositório e compartilhar fotos da sua montagem também ajuda muito.
