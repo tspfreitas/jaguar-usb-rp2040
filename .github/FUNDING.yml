@@ -1,0 +1,6 @@
+Shows a "Sponsor" button on the repository page.
+# Remove the "#" and put your username on the lines you use. Delete the others.
+github: @tspfreitas        # needs GitHub Sponsors to be enabled
+ko_fi: ko-fi.com/thomasfreitas
+# buy_me_a_coffee: YOUR_NAME
+# custom: ["https://paypal.me/YOUR_NAME"]
