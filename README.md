@@ -148,7 +148,7 @@ If you like this kind of work, please also consider supporting the original auth
 This adapter is free and open source. If it was useful to you and you would like to help fund future retro-gaming hardware projects, donations are very welcome and entirely optional. They do not entitle you to support or special features.
 
 <!-- Edit the links below with your own pages, and delete the ones you do not use. -->
-- ☕ **Ko-fi:** https://ko-fi.com/YOUR_NAME
+- ☕ **Ko-fi:** ko-fi.com/thomasfreitas
 - 🇧🇷 **Pix:** `dev.freitas@gmail.com`
 
 Starring the repository and sharing photos of your build also helps a lot.
