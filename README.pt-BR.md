@@ -112,22 +112,6 @@ Para atualizar o firmware no futuro, repita os mesmos passos com o novo `.uf2`.
 | Botão 16 | Teclado 0 |
 | Botão 17 | Teclado # |
 
-## Compilando o código-fonte
-
-Você não precisa instalar nada se usar o GitHub Actions: envie o repositório para o GitHub e o workflow **build-uf2** gera o `jaguar_usb_rp2040.uf2` como um artefato para download.
-
-Para compilar localmente (Linux / WSL):
-
-```bash
-sudo apt install cmake build-essential gcc-arm-none-eabi \
-    libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
-git clone --recurse-submodules https://github.com/raspberrypi/pico-sdk.git ~/pico-sdk
-export PICO_SDK_PATH=~/pico-sdk
-cmake -B build -S .
-cmake --build build -j
-```
-
-O firmware é gerado em `build/jaguar_usb_rp2040.uf2`.
 
 **Ajustes:** se alguma tecla ler de forma instável (por exemplo, com cabo longo), aumente o `SETTLE_US` no `main.c`. O VID/PID USB em `usb_descriptors.c` são valores de teste do TinyUSB; troque-os se for distribuir o adaptador.
 
@@ -165,9 +149,7 @@ Este adaptador é gratuito e de código aberto. Se ele foi útil e você quiser 
 
 <!-- Edite os links abaixo com as suas páginas e apague os que não for usar. -->
 - ☕ **Ko-fi:** https://ko-fi.com/YOUR_NAME
-- ☕ **Buy Me a Coffee:** https://www.buymeacoffee.com/YOUR_NAME
-- 💙 **PayPal:** https://paypal.me/YOUR_NAME
-- 🇧🇷 **Pix:** `SUA_CHAVE_PIX`
+- 🇧🇷 **Pix:** `dev.freitas@gmail.com`
 
 Dar uma estrela no repositório e compartilhar fotos da sua montagem também ajuda muito.
 
