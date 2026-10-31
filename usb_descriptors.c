@@ -1,21 +1,27 @@
 /*
- * Descritores USB do adaptador Atari Jaguar -> USB (RP2040).
+ * USB descriptors for the Atari Jaguar to USB adapter (RP2040 port).
  *
- * O relatório HID tem 5 bytes, com o mesmo layout do projeto original
- * raphnet/jaguar_usb (2 eixos de 8 bits + 17 botões):
- *   byte 0: X   (0x00 = esquerda, 0x80 = centro, 0xFF = direita)
- *   byte 1: Y   (0x00 = cima,     0x80 = centro, 0xFF = baixo)
- *   byte 2: botões 1..8   (A, B, C, Option, Pause, teclas 1, 2, 3)
- *   byte 3: botões 9..16  (teclas 4..9, *, 0)
- *   byte 4: botão 17      (tecla #), bits 1..7 = padding
+ * Copyright (C) 2009-2016 Raphaël Assénat   (original report layout, raphnet)
+ * Copyright (C) 2026 <YOUR NAME>             (RP2040 / TinyUSB port)
+ *
+ * Licensed under the GNU General Public License, version 2 or (at your
+ * option) any later version. See the LICENSE file for details.
+ *
+ * The HID report is 5 bytes long and uses the same layout as the original
+ * raphnet/jaguar_usb project (two 8-bit axes + 17 buttons):
+ *   byte 0: X   (0x00 = left,  0x80 = center, 0xFF = right)
+ *   byte 1: Y   (0x00 = up,    0x80 = center, 0xFF = down)
+ *   byte 2: buttons 1..8   (A, B, C, Option, Pause, keys 1, 2, 3)
+ *   byte 3: buttons 9..16  (keys 4..9, *, 0)
+ *   byte 4: button 17      (key #), bits 1..7 = padding
  */
 
 #include <string.h>
 #include "tusb.h"
 #include "pico/unique_id.h"
 
-/* VID/PID de teste do TinyUSB. Troque se for distribuir o adaptador.
- * NÃO use o VID/PID da raphnet. */
+/* TinyUSB test VID/PID. Change it if you distribute the adapter.
+ * Do NOT reuse raphnet's VID/PID. */
 #define USB_VID 0xCafe
 #define USB_PID 0x4A47
 
@@ -69,7 +75,7 @@ static const tusb_desc_device_t desc_device = {
 
 static const uint8_t desc_configuration[] = {
     TUD_CONFIG_DESCRIPTOR(1, 1, 0, CONFIG_TOTAL_LEN, 0x00, 100),
-    // interface 0, sem boot protocol, endpoint IN 0x81, 8 bytes, intervalo de 1 ms
+    // interface 0, no boot protocol, IN endpoint 0x81, 8 bytes, 1 ms interval
     TUD_HID_DESCRIPTOR(0, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report), EPNUM_HID, 8, 1)
 };
 
@@ -93,10 +99,10 @@ uint8_t const *tud_hid_descriptor_report_cb(uint8_t instance)
 static char serial_str[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 1];
 
 static const char *string_desc_arr[] = {
-    (const char[]){0x09, 0x04},   // 0: idioma (inglês, 0x0409)
-    "DIY",                        // 1: fabricante
-    "Atari Jaguar Controller",    // 2: produto
-    serial_str                    // 3: número de série
+    (const char[]){0x09, 0x04},   // 0: language (English, 0x0409)
+    "DIY",                        // 1: manufacturer
+    "Atari Jaguar Controller",    // 2: product
+    serial_str                    // 3: serial number
 };
 
 static uint16_t desc_str[32];

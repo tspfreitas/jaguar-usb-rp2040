@@ -1,42 +1,58 @@
 /*
- * Atari Jaguar controller -> USB (RP2040-Zero)
+ * Atari Jaguar controller to USB adapter (RP2040 port)
  *
- * Porte do firmware raphnet/jaguar_usb (Copyright (C) 2009-2016 Raphaël Assénat,
- * GNU GPL v2 ou posterior) para o RP2040 com TinyUSB. A V-USB foi removida
- * (o RP2040 tem USB nativo); a lógica de leitura da matriz e o formato do
- * relatório HID foram mantidos. Este código continua sob GPL v2.
+ * Copyright (C) 2009-2016 Raphaël Assénat   (original AVR firmware, raphnet)
+ * Copyright (C) 2026 <YOUR NAME>             (RP2040 / TinyUSB port)
  *
- * Ligação (Jaguar DB15 -> RP2040-Zero):
+ * This is a port of raphnet/jaguar_usb (https://github.com/raphnet/jaguar_usb).
+ * The V-USB software USB stack and the AVR-specific code were replaced by
+ * TinyUSB running on the RP2040's native USB controller. The controller
+ * matrix scanning logic and the HID report layout come from the original.
  *
- *   Pino 1  (colunas) -> GP0     Pino 10 (linha 0) -> GP4
- *   Pino 2  (colunas) -> GP1     Pino 6  (linha 1) -> GP5
- *   Pino 3  (colunas) -> GP2     Pino 13 (linha 2) -> GP6
- *   Pino 4  (colunas) -> GP3     Pino 12 (linha 3) -> GP7
- *                                Pino 11 (linha 4) -> GP8
- *   Pino 7  (VCC)     -> 3V3     Pino 14 (linha 5) -> GP9
- *   Pino 9  (GND)     -> GND
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * ATENÇÃO: alimente o controle com 3V3, nunca com 5 V (os pinos do RP2040
- * não toleram 5 V).
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Wiring (Jaguar DB15 -> RP2040-Zero):
+ *
+ *   Pin 1  (column 0) -> GP0      Pin 10 (row 0) -> GP4
+ *   Pin 2  (column 1) -> GP1      Pin 6  (row 1) -> GP5
+ *   Pin 3  (column 2) -> GP2      Pin 13 (row 2) -> GP6
+ *   Pin 4  (column 3) -> GP3      Pin 12 (row 3) -> GP7
+ *                                 Pin 11 (row 4) -> GP8
+ *   Pin 7  (VCC)      -> 3V3      Pin 14 (row 5) -> GP9
+ *   Pin 9  (GND)      -> GND
+ *
+ * WARNING: power the controller from 3V3, never from 5 V (RP2040 GPIOs
+ * are not 5 V tolerant).
  */
-
 #include <string.h>
 #include "pico/stdlib.h"
 #include "tusb.h"
 
-/* Tempo de assentamento após ativar uma coluna. Aumente se houver leitura
- * instável (cabos longos); o projeto original usava 2000 us. */
+/* Settling time after driving a column low. Increase if readings are
+ * unstable (long cables); the original AVR firmware used 2000 us. */
 #define SETTLE_US 100
 
-/* Intervalo entre varreduras do controle */
+/* Interval between controller scans */
 #define POLL_US 2000
 
-/* Colunas: pinos 1, 2, 3 e 4 do conector do Jaguar */
+/* Columns: pins 1, 2, 3 and 4 of the Jaguar connector */
 static const uint8_t COL_PINS[4] = { 0, 1, 2, 3 };
 
-/* Linhas, na mesma ordem de bits do código original (coldat):
- * bit0 = pino 10, bit1 = pino 6, bit2 = pino 13,
- * bit3 = pino 12, bit4 = pino 11, bit5 = pino 14 */
+/* Rows, in the same bit order as the original code (coldat):
+ * bit0 = pin 10, bit1 = pin 6, bit2 = pin 13,
+ * bit3 = pin 12, bit4 = pin 11, bit5 = pin 14 */
 static const uint8_t ROW_PINS[6] = { 4, 5, 6, 7, 8, 9 };
 
 typedef struct __attribute__((packed)) {
@@ -72,14 +88,14 @@ static void jaguar_init(void)
     }
 }
 
-/* Cada coluna é ativada puxando-a para nível baixo; as linhas têm pull-up,
- * então tecla pressionada = bit 0 em coldat. */
+/* Each column is activated by pulling it low; rows have pull-ups,
+ * so a pressed key reads as bit 0 in coldat. */
 static void read_controller(jag_state_t *st)
 {
     uint8_t coldat[4];
 
     for (int col = 0; col < 4; col++) {
-        gpio_set_dir(COL_PINS[col], GPIO_OUT);   /* saída em nível baixo */
+        gpio_set_dir(COL_PINS[col], GPIO_OUT);   /* output, driven low */
         sleep_us(SETTLE_US);
 
         uint8_t d = 0;
@@ -89,7 +105,7 @@ static void read_controller(jag_state_t *st)
         }
         coldat[col] = d;
 
-        gpio_set_dir(COL_PINS[col], GPIO_IN);    /* volta a entrada com pull-up */
+        gpio_set_dir(COL_PINS[col], GPIO_IN);    /* back to input with pull-up */
     }
 
     memset(st, 0, sizeof(*st));
@@ -105,22 +121,22 @@ static void read_controller(jag_state_t *st)
     st->btnsKp[2] = !(coldat[0] & 0x10);  /* 3 */
     st->btnsKp[1] = !(coldat[1] & 0x10);  /* 2 */
     st->btnsKp[0] = !(coldat[2] & 0x10);  /* 1 */
-    if (!(coldat[3] & 0x10)) st->x = 0xFF; /* Leste */
+    if (!(coldat[3] & 0x10)) st->x = 0xFF; /* East */
 
     st->btnsKp[5] = !(coldat[0] & 0x08);  /* 6 */
     st->btnsKp[4] = !(coldat[1] & 0x08);  /* 5 */
     st->btnsKp[3] = !(coldat[2] & 0x08);  /* 4 */
-    if (!(coldat[3] & 0x08)) st->x = 0x00; /* Oeste */
+    if (!(coldat[3] & 0x08)) st->x = 0x00; /* West */
 
     st->btnsKp[8] = !(coldat[0] & 0x04);  /* 9 */
     st->btnsKp[7] = !(coldat[1] & 0x04);  /* 8 */
     st->btnsKp[6] = !(coldat[2] & 0x04);  /* 7 */
-    if (!(coldat[3] & 0x04)) st->y = 0xFF; /* Sul */
+    if (!(coldat[3] & 0x04)) st->y = 0xFF; /* South */
 
     st->btnsKp[11] = !(coldat[0] & 0x20); /* # */
     st->btnsKp[10] = !(coldat[1] & 0x20); /* 0 */
     st->btnsKp[9]  = !(coldat[2] & 0x20); /* * */
-    if (!(coldat[3] & 0x20)) st->y = 0x00; /* Norte */
+    if (!(coldat[3] & 0x20)) st->y = 0x00; /* North */
 }
 
 static void jaguar_update(void)
@@ -153,7 +169,7 @@ static void jaguar_update(void)
     cur_report.btns3 = b3;
 }
 
-/* ----------------------- callbacks do TinyUSB ----------------------- */
+/* ------------------------- TinyUSB callbacks ------------------------ */
 
 uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id,
                                hid_report_type_t report_type,
@@ -182,7 +198,7 @@ int main(void)
     tusb_init();
 
     jaguar_update();
-    bool pending = true;   /* envia o estado inicial */
+    bool pending = true;   /* send the initial state */
     uint32_t last_poll = time_us_32();
 
     while (true) {
